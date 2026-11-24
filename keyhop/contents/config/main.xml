@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0 http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+  <kcfgfile name=""/>
+  <group name="">
+    <entry name="warp" type="Bool">
+      <label>Move the mouse pointer to a window that gets focus when the mouse pointer is not on it</label>
+      <default>true</default>
+    </entry>
+    <entry name="passThroughMs" type="Int">
+      <label>A window that had focus for less than this goes back behind the windows that were in front of it (ms; 0 = off)</label>
+      <default>1000</default>
+      <min>0</min>
+      <max>10000</max>
+    </entry>
+    <entry name="wrap" type="Bool">
+      <label>At the end of the row, carry on from the other end</label>
+      <default>false</default>
+    </entry>
+    <entry name="excludeClasses" type="String">
+      <label>Window classes to ignore</label>
+      <default>plasmashell,krunner,ksmserver-logout-greeter</default>
+    </entry>
+    <entry name="debug" type="Bool">
+      <label>Log what the script does</label>
+      <default>false</default>
+    </entry>
+  </group>
+</kcfg>

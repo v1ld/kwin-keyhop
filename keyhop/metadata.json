@@ -1,0 +1,16 @@
+{
+    "KPackageStructure": "KWin/Script",
+    "KPlugin": {
+        "Id": "keyhop",
+        "Name": "KeyHop",
+        "Description": "When you switch through several windows by keyboard, only the window you started on and the one you end on stay raised; the ones you pass through go back to how they were. Also moves the mouse pointer to the focused window (can be turned off).",
+        "Icon": "input-mouse",
+        "Version": "1.0.0",
+        "License": "MIT",
+        "EnabledByDefault": false
+    },
+    "X-Plasma-API": "javascript",
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "X-Plasma-MainScript": "code/main.js",
+    "X-KDE-ConfigModule": "kwin/effects/configs/kcm_kwin4_genericscripted"
+}
