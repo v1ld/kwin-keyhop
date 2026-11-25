@@ -6,7 +6,8 @@
  *     is not on it, the pointer is moved to its centre (through KWin's own
  *     "Move Mouse to Focus" action; scripts cannot move the pointer
  *     themselves). A focus change made with the mouse never moves it, because
- *     then the pointer is on the window already.
+ *     then the pointer is on the window already. Nor does a window opening,
+ *     or focus passing on because a window closed.
  *
  *  2. Windows you only pass through drop back. Switching by keyboard raises
  *     every window on the way. A window that held focus for less than
@@ -133,9 +134,21 @@ function restack(want) {
     return { order: want, raised: want.length - i };
 }
 
+// Windows that existed before now. KWin gives a new window focus before it
+// announces it (windowAdded), so a window that gets focus without being in
+// this list has just opened.
+let known = [];
+function forget(w) { known = known.filter(function (x) { return x !== w; }); }
+
 const onActivated = guard("windowActivated", function (w) {
+    const opened = w && known.indexOf(w) === -1;
+    if (opened) known.push(w);
     if (!managed(w) || w === cur) return;
     const now = Date.now();
+    // Focus arrived here because the window that had it closed. KWin marks the
+    // closing window as deleted before it passes focus on.
+    let closed = false;
+    try { closed = cur !== null && cur.deleted === true; } catch (e) { closed = true; }
     const prev = cur && !cur.deleted ? cur : null;
     const passed = prev !== null && CFG.passThroughMs > 0 && now - curSince < CFG.passThroughMs;
 
@@ -157,7 +170,12 @@ const onActivated = guard("windowActivated", function (w) {
     }
     cur = w;
     curSince = now;
-    warpTo(w);
+    // The mouse pointer follows focus changes you make, not ones that happen
+    // to you: a window opening can come at any moment, and after closing a
+    // window the mouse may be in the middle of a movement of your own.
+    if (opened) log(name(w) + " has just opened: mouse pointer left alone");
+    else if (closed) log("focus came to " + name(w) + " because a window closed: mouse pointer left alone");
+    else warpTo(w);
 });
 
 // ----------------------------------------------------------------- the row
@@ -196,6 +214,9 @@ function init() {
     if (managed(a)) { cur = a; curSince = Date.now() - 3600000; }
     tenure = stack();
     settled = tenure.slice();
+    known = Array.prototype.slice.call(workspace.stackingOrder);
+    workspace.windowAdded.connect(guard("windowAdded", function (w) { if (known.indexOf(w) === -1) known.push(w); }));
+    workspace.windowRemoved.connect(guard("windowRemoved", forget));
     workspace.windowActivated.connect(onActivated);
     registerShortcut("KeyHop Window to the Left", "KeyHop: Window to the Left", "", guard("left", function () { hop(-1); }));
     registerShortcut("KeyHop Window to the Right", "KeyHop: Window to the Right", "", guard("right", function () { hop(1); }));

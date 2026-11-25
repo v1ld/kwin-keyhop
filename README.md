@@ -5,13 +5,13 @@ When you switch through several windows by keyboard, only the window you started
 A small KWin script for desktops with overlapping windows.
 
 - **Windows you only pass through go back.** Going from one window to another with directional switching (for example Meta+arrows) brings every window on the way to the front. A window that had focus for less than a second is put back behind the windows that were in front of it, as soon as focus moves on. Go `w1 → w3 → w4 → w2` quickly and you end with `w2` in front, `w1` right behind it, and `w3` and `w4` where they were before you set off. Stay on a window longer than that and it stays in front.
-- **The mouse pointer follows focus.** When a window gets focus and the mouse pointer is not on it, the mouse pointer moves to the centre of that window. A focus change made with the mouse never moves it, because then it is on the window already.
+- **The mouse pointer follows focus.** When a window gets focus and the mouse pointer is not on it, the mouse pointer moves to the centre of that window. A focus change made with the mouse never moves it, because then it is on the window already. A window opening does not move it either, nor does focus passing on because a window closed: those happen to you, often while the mouse is busy with something else.
 
 - **Left and right along one row.** Two shortcuts, *KeyHop: Window to the Left* and *KeyHop: Window to the Right*, treat the windows on the desktop as a single row from left to right, ordered by their centres. KWin's own direction shortcuts compare the centre of the window you are on with an edge of the others, so with overlapping windows they skip some and can land somewhere unexpected. A single row reaches every window, and going right then left always brings you back.
 
 The second part matters most with **focus follows mouse**, where a keyboard switch otherwise leaves the mouse pointer behind on the old window: the next nudge of the mouse can hand focus straight back, scrolling goes to the wrong window, and a window you can't point at can't be reached at all. The first part is useful with any focus setting. Tiling and scrolling window managers have no overlapping windows to tidy, so it is not for them.
 
-It listens to KWin's focus-change signal, so it works whatever changed the focus: Alt+Tab, switch-window shortcuts, a window closing, a new window opening, another script.
+It listens to KWin's focus-change signal, so it works whatever changed the focus: Alt+Tab, switch-window shortcuts, another script.
 
 ## Requirements
 
@@ -69,4 +69,5 @@ MIT, see `LICENSE`.
 
 ## Version history
 
+- **1.0.1:** the mouse pointer is no longer moved when a window opens, or when focus passes on because a window closed.
 - **1.0.0:** first version.

@@ -5,7 +5,7 @@
         "Name": "KeyHop",
         "Description": "When you switch through several windows by keyboard, only the window you started on and the one you end on stay raised; the ones you pass through go back to how they were. Also moves the mouse pointer to the focused window (can be turned off).",
         "Icon": "input-mouse",
-        "Version": "1.0.0",
+        "Version": "1.0.1",
         "License": "MIT",
         "EnabledByDefault": false
     },

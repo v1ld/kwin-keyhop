@@ -14,7 +14,7 @@ function makeEnv(cfg, noRaise) {
     const emit = function (w) { frozen = windows.slice(); try { ws.windowActivated.emit(w); } finally { frozen = null; } };
     let active = null;
     env.shortcuts = {};
-    const ws = { cursorPos: { x: 0, y: 0 }, currentDesktop: "d1", windowActivated: Signal() };
+    const ws = { cursorPos: { x: 0, y: 0 }, currentDesktop: "d1", windowActivated: Signal(), windowAdded: Signal(), windowRemoved: Signal() };
     Object.defineProperty(ws, "stackingOrder", { get: function () { return (frozen || windows).slice(); } });
     if (!noRaise) ws.raiseWindow = function (w) { const i = windows.indexOf(w); if (i < 0) throw new Error("unknown window"); windows.splice(i, 1); windows.push(w); env.raises++; };
     env.add = function (name, x, y, w, h, o) {
@@ -27,6 +27,10 @@ function makeEnv(cfg, noRaise) {
     // a script setting activeWindow activates and raises, like a keyboard switch
     Object.defineProperty(ws, "activeWindow", { get: function () { return active; }, set: function (w) { if (w === active) return; if (env.silent) { active = w; return; } env.key(w); } });
     env.hover = function (w) { const g = w.frameGeometry; ws.cursorPos = { x: g.x + g.width - 5, y: g.y + g.height - 5 }; active = w; emit(w); };
+    // like KWin: a new window gets focus first and is announced afterwards
+    env.open = function (name, x, y, w, h, quiet) { const win = env.add(name, x, y, w, h); if (!quiet) { active = win; emit(win); } else { windows.splice(windows.indexOf(win), 1); windows.unshift(win); } ws.windowAdded.emit(win); return win; };
+    // like KWin: marked deleted, focus passes to `next`, then it is removed
+    env.close = function (w, next) { w.deleted = true; if (active === w && next) { const i = windows.indexOf(next); windows.splice(i, 1); windows.push(next); active = next; emit(next); } windows.splice(windows.indexOf(w), 1); ws.windowRemoved.emit(w); };
     env.wait = function (ms) { env.t += ms; };
     env.order = function () { return windows.map(function (w) { return w.caption; }).join(" "); };
     const FakeDate = { now: function () { return env.t; } };
@@ -168,6 +172,20 @@ function setup(cfg, noRaise) {
     const A2 = ce.add("A", 100, 100, 3000, 800), B2 = ce.add("B", 900, 1000, 700, 500);
     ce.silent = true; ce.ws.activeWindow = B2; ce.silent = false; ce.start();
     ce.shortcuts["KeyHop Window to the Right"](); ok(ce.ws.activeWindow === A2, "centre order: wide A (centre 1600) is right of B (centre 1250)");
+})();
+(function () {
+    // opening and closing windows leave the mouse pointer alone
+    const e = setup();
+    e.wait(5000); const n = e.open("new", 2500, 1000, 600, 400);
+    ok(e.warps === 0 && e.ws.activeWindow === n, "a window opening: gets focus, mouse pointer not moved");
+    e.wait(5000); e.key(e.w3); ok(e.warps === 1, "switching away by keyboard still moves it");
+    e.wait(5000); e.key(n); ok(e.warps === 2, "and switching back to the once-new window moves it");
+    e.wait(5000); e.close(n, e.w3); ok(e.warps === 2 && e.ws.activeWindow === e.w3, "closing the focused window: focus passes on, mouse pointer not moved");
+    e.wait(5000); e.key(e.w4); ok(e.warps === 3, "the next keyboard switch moves it again");
+    const bg = e.open("bg", 3200, 200, 500, 400, true);
+    e.wait(5000); e.key(bg); ok(e.warps === 4, "a window that opened without focus is not 'new' when you later switch to it");
+    e.wait(5000); e.close(e.w5, null); e.key(e.w2); ok(e.warps === 5, "another window closing in the background changes nothing");
+    ok(e.logs.filter(function (l) { return l.indexOf("error") >= 0; }).length === 0, "no errors");
 })();
 console.log(fails ? fails + " FAILED" : "all passed");
 process.exit(fails ? 1 : 0);
