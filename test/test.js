@@ -187,5 +187,34 @@ function setup(cfg, noRaise) {
     e.wait(5000); e.close(e.w5, null); e.key(e.w2); ok(e.warps === 5, "another window closing in the background changes nothing");
     ok(e.logs.filter(function (l) { return l.indexOf("error") >= 0; }).length === 0, "no errors");
 })();
+(function () {
+    // the column: yesterday's layout. C front left, gL below it, Z beside and a little lower, gR alone.
+    const mk = function (cfg) {
+        const e = makeEnv(cfg);
+        e.Z = e.add("Z", 1300, 480, 1200, 1050); e.gR = e.add("gR", 2850, 380, 1100, 760); e.gL = e.add("gL", 150, 1050, 1100, 650); e.C = e.add("C", 180, 330, 1420, 1180);
+        e.silent = true; e.ws.activeWindow = e.gL; e.silent = false; e.ws.cursorPos = { x: 300, y: 1650 }; e.start();
+        e.U = e.shortcuts["KeyHop Window Up"]; e.D = e.shortcuts["KeyHop Window Down"];
+        e.at = function () { return e.ws.activeWindow.caption; };
+        e.go = function (w) { e.wait(5000); e.key(w); e.wait(5000); };
+        return e;
+    };
+    let e = mk();
+    ok(typeof e.U === "function" && typeof e.D === "function", "up and down shortcuts registered");
+    e.wait(5000); e.U(); ok(e.at() === "C", "up from gL goes to C (" + e.at() + ")");
+    e.wait(200); e.U(); ok(e.at() === "C", "quick second up: top of gL's column, Z is not in it (" + e.at() + ")");
+    e.wait(200); e.D(); ok(e.at() === "gL", "down returns to gL");
+    e.go(e.Z); e.U(); ok(e.at() === "C", "up from Z goes to C, not to gR");
+    e.go(e.Z); e.D(); ok(e.at() === "Z", "down from Z: nothing below it");
+    e.go(e.gR); e.U(); e.wait(200); e.D(); ok(e.at() === "gR", "gR is alone in its column: up and down do nothing");
+    // from C after a stop, the column is C's own: C, Z, gL from top to bottom
+    e.go(e.C); const seen = [e.at()]; e.D(); seen.push(e.at()); e.wait(200); e.D(); seen.push(e.at()); e.wait(200); e.D(); seen.push(e.at());
+    ok(seen.join(" ") === "C Z gL gL", "down from C walks its column top to bottom and stops (" + seen.join(" ") + ")");
+    e.wait(200); e.U(); e.wait(200); e.U(); ok(e.at() === "C", "and up, up retraces it while hopping quickly");
+    // column held still: gL > C quickly, then down must return to gL even though Z is nearer below C
+    e.go(e.gL); e.U(); e.wait(200); e.D(); ok(e.at() === "gL", "up then quick down returns (column held still)");
+    e.go(e.gL); e.U(); e.wait(5000); e.D(); ok(e.at() === "Z", "after stopping on C, down uses C's own column (" + e.at() + ")");
+    e = mk({ wrap: true }); e.wait(5000); e.D(); ok(e.at() === "C", "wrap on: down from the bottom of the column goes to its top");
+    ok(e.logs.filter(function (l) { return l.indexOf("error") >= 0; }).length === 0, "no errors");
+})();
 console.log(fails ? fails + " FAILED" : "all passed");
 process.exit(fails ? 1 : 0);

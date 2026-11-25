@@ -9,6 +9,8 @@ A small KWin script for desktops with overlapping windows.
 
 - **Left and right along one row.** Two shortcuts, *KeyHop: Window to the Left* and *KeyHop: Window to the Right*, treat the windows on the desktop as a single row from left to right, ordered by their centres. KWin's own direction shortcuts compare the centre of the window you are on with an edge of the others, so with overlapping windows they skip some and can land somewhere unexpected. A single row reaches every window, and going right then left always brings you back.
 
+- **Up and down within a column.** *KeyHop: Window Up* and *KeyHop: Window Down* move among the windows that share some horizontal span with the one you are on, ordered from top to bottom by their centres. While you hop quickly the column stays that of the window you set off from, so up, up, down, down brings you back. A column does not hold every window; left and right are the traversal that reaches everything, up and down are for when the window you want is plainly above or below.
+
 The second part matters most with **focus follows mouse**, where a keyboard switch otherwise leaves the mouse pointer behind on the old window: the next nudge of the mouse can hand focus straight back, scrolling goes to the wrong window, and a window you can't point at can't be reached at all. The first part is useful with any focus setting. Tiling and scrolling window managers have no overlapping windows to tidy, so it is not for them.
 
 It listens to KWin's focus-change signal, so it works whatever changed the focus: Alt+Tab, switch-window shortcuts, another script.
@@ -31,7 +33,7 @@ Installs or upgrades, enables the script and loads it into the running KWin. `./
 
 ## Shortcuts
 
-The two row shortcuts have no keys when installed. Bind them in System Settings > Keyboard > Shortcuts (search for KeyHop). To use Meta+Left and Meta+Right, first clear those keys from KWin's *Switch to Window to the Left / Right*.
+The four direction shortcuts have no keys when installed. Bind them in System Settings > Keyboard > Shortcuts (search for KeyHop). To use Meta+arrows, first clear those keys from KWin's own *Switch to Window to the Left / Right / Up / Down*.
 
 ## Settings
 
@@ -41,7 +43,7 @@ System Settings > Window Management > KWin Scripts > KeyHop.
 |---|---|---|
 | `passThroughMs` | 1000 | A window that had focus for less than this many milliseconds goes back behind the windows that were in front of it when focus moves on. 0 turns this off. |
 | `warp` | true | Move the mouse pointer to a window that gets focus when the mouse pointer is not on it. |
-| `wrap` | false | At the end of the row, carry on from the other end. Off: the shortcut does nothing there. |
+| `wrap` | false | At the end of the row or column, carry on from the other end. Off: the shortcut does nothing there. |
 | `excludeClasses` | `plasmashell,krunner,ksmserver-logout-greeter` | Window classes whose focus changes are ignored altogether. |
 | `debug` | false | Log what the script does: `journalctl --user -b \| grep keyhop`. |
 
@@ -69,5 +71,6 @@ MIT, see `LICENSE`.
 
 ## Version history
 
+- **1.1.0:** *Window Up* and *Window Down*, moving within the column of windows that share some horizontal span with the one you set off from.
 - **1.0.1:** the mouse pointer is no longer moved when a window opens, or when focus passes on because a window closed.
 - **1.0.0:** first version.

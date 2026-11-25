@@ -15,7 +15,7 @@
       <max>10000</max>
     </entry>
     <entry name="wrap" type="Bool">
-      <label>At the end of the row, carry on from the other end</label>
+      <label>At the end of the row or column, carry on from the other end</label>
       <default>false</default>
     </entry>
     <entry name="excludeClasses" type="String">

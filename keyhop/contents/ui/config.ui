@@ -29,8 +29,8 @@
    </item>
    <item row="2" column="0" colspan="2">
     <widget class="QCheckBox" name="kcfg_wrap">
-     <property name="text"><string>Left/right shortcuts: at the end of the row, carry on from the other end</string></property>
-     <property name="toolTip"><string>"Window to the Left" and "Window to the Right" treat the windows on the desktop as one row, ordered by their centres. Bind the two shortcuts in System Settings > Keyboard > Shortcuts.</string></property>
+     <property name="text"><string>Direction shortcuts: at the end of the row or column, carry on from the other end</string></property>
+     <property name="toolTip"><string>"Window to the Left" and "Window to the Right" treat the windows on the desktop as one row, ordered by their centres. "Window Up" and "Window Down" move within the column of windows that share some horizontal span with the one you set off from. Bind the shortcuts in System Settings > Keyboard > Shortcuts.</string></property>
     </widget>
    </item>
    <item row="3" column="0">

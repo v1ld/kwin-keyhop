@@ -21,6 +21,9 @@
  *     an edge of the others, which skips windows when they overlap. A single
  *     row reaches every window, and going right then left brings you back.
  *
+ *  4. Two more, "Window Up" and "Window Down", that move within a column: the
+ *     windows that share some horizontal span with the one you set off from.
+ *
  * 1 and 2 work from KWin's focus-change signal, so it does not matter how
  * focus was changed.
  */
@@ -209,6 +212,46 @@ function hop(dir) {
     workspace.activeWindow = r[to];
 }
 
+// -------------------------------------------------------------- the column
+// Up and down move within a column: the windows that share some horizontal
+// span with the window you set off from, ordered top to bottom by centre.
+// While you hop quickly the column stays that of the window you set off from,
+// so up, up, down, down brings you back. Unlike the row, a column does not
+// hold every window: left and right are the complete traversal.
+let colAnchor = null, colLast = null, colLastAt = 0;
+function sharesSpan(a, b) {
+    const g = a.frameGeometry, h = b.frameGeometry;
+    return g.x < h.x + h.width && h.x < g.x + g.width;
+}
+function column(anchor) {
+    const items = stack().filter(onCurrentDesktop)
+        .filter(function (w) { return w === anchor || sharesSpan(w, anchor); })
+        .map(function (w, i) { const g = w.frameGeometry; return { w: w, k: [g.y + g.height / 2, g.y, g.x], i: i }; });
+    items.sort(function (a, b) {
+        for (let n = 0; n < 3; n++) if (a.k[n] !== b.k[n]) return a.k[n] - b.k[n];
+        return a.i - b.i;
+    });
+    return items.map(function (it) { return it.w; });
+}
+function hopV(dir) {
+    const a = workspace.activeWindow;
+    if (!managed(a)) return;
+    const now = Date.now();
+    const quick = now - colLastAt < (CFG.passThroughMs > 0 ? CFG.passThroughMs : 1000);
+    let anchor = quick && a === colLast && colAnchor && !colAnchor.deleted && onCurrentDesktop(colAnchor) ? colAnchor : a;
+    let c = column(anchor);
+    if (c.indexOf(a) === -1) { anchor = a; c = column(a); }      // windows moved meanwhile
+    const at = c.indexOf(a);
+    let to = at + dir;
+    if (to < 0 || to >= c.length) {
+        if (!CFG.wrap || c.length < 2) { log((dir > 0 ? "bottom" : "top") + " of the column"); return; }
+        to = (to + c.length) % c.length;
+    }
+    colAnchor = anchor; colLast = c[to]; colLastAt = now;
+    log((dir > 0 ? "down" : "up") + " to " + name(c[to]) + " (" + (to + 1) + " of " + c.length + " in the column of " + name(anchor) + ")");
+    workspace.activeWindow = c[to];
+}
+
 function init() {
     const a = workspace.activeWindow;
     if (managed(a)) { cur = a; curSince = Date.now() - 3600000; }
@@ -220,6 +263,8 @@ function init() {
     workspace.windowActivated.connect(onActivated);
     registerShortcut("KeyHop Window to the Left", "KeyHop: Window to the Left", "", guard("left", function () { hop(-1); }));
     registerShortcut("KeyHop Window to the Right", "KeyHop: Window to the Right", "", guard("right", function () { hop(1); }));
+    registerShortcut("KeyHop Window Up", "KeyHop: Window Up", "", guard("up", function () { hopV(-1); }));
+    registerShortcut("KeyHop Window Down", "KeyHop: Window Down", "", guard("down", function () { hopV(1); }));
     say("loaded (pointer follows focus: " + (CFG.warp ? "on" : "off") + "; pass-through: " +
         (CFG.passThroughMs > 0 && canRestack ? "under " + CFG.passThroughMs + " ms" : "off") + ")");
 }
